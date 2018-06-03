@@ -1,0 +1,151 @@
+<template>
+  <wxc-panel title="{{item.code}}" wx:for="{{results}}" wx:key="{{id}}">
+  <wxc-cc class="content">
+    <wxc-icon size="48" type="{{item.checked ? 'yes' : 'help'}}"></wxc-icon>
+    <view class="inline">{{item.small_message}}</view>
+    <view class="inline right">
+    <wxc-button data-code="{{item.code}}" bindtap="copy" plain="{{true}}" type="primary" value="复制"></wxc-button>
+    <wxc-icon size="48" type="{{item.id == show_detail ? 'arrow-down':'arrow-left'}}"
+      data-id="{{item.id}}" bindtap="change_open"></wxc-icon>
+    </view>
+  </wxc-cc>
+  <wxc-panel border="{{false}}" class=" {{item.id == show_detail ? '':'hidden'}}">
+    <view>提交时间: {{item.created}}</view>
+    <view>详细信息: {{item.message}}</view>
+    <view>已验证: {{item.checked ? '是' : '否'}}</view>
+  </wxc-panel>
+  </wxc-panel>
+</template>
+
+<script>
+export default {
+  config: {
+    navigationBarTitleText: 'PassCode',
+    usingComponents: {
+      'wxc-panel': '@minui/wxc-panel',
+      'wxc-icon': '@minui/wxc-icon',
+      'wxc-elip': '@minui/wxc-elip',
+            'wxc-button': '@minui/wxc-button',
+    }
+  },
+  data: {
+    show_detail: 0,
+    'results': [
+      {
+        id: 1, created: "2018-06-03 00:23", code: "WWD59OWEN767JZ",
+        message: "一个八炸两个八糖三个绿毒四个AXA五个脚一个八炸两个八糖三个绿毒四个AXA五个脚", checked: false
+      },
+      {
+        id: 2, created: "2018-06-03 00:23", code: "WWD59OWEN767JZ1",
+        message: "?", checked: true
+      }
+    ]
+  },
+  onLoad: function () {
+    function strLeft(s, n) {
+      console.log(s, n);
+      var s2 = s.slice(0, n),
+      i = s2.replace(/[x00-xff]/g, "").length;
+      switch (i) {
+        case 0: return s2;
+        case n: return s.slice(0, n>>1);
+        default:
+          var k = n - i,
+            s3 = s.slice(k, n),
+            j = s3.replace(/[x00-xff]/g, "").length;
+        return j ? s.slice(0, k) + strLeft(s3, j) : s.slice(0, k);
+      }
+    }
+    wx.showToast({
+      title: '加载中...',
+      icon: 'loading',
+      duration: 2000
+    })
+    wx.request({
+      url: 'https://xiao.bllli.cn/code/codes/',
+      header: {
+        'content-type': 'application/json' // 默认值
+      },
+      success: function (res) {
+        wx.showToast({
+          title: '加载完成', 
+          icon: 'success',
+          duration: 500
+        })
+        let r = []
+        res.data.results.forEach(function(e){
+          r.push(e)
+          // console.log(r);
+          if(e.message.length > 25){
+            r[r.length-1].small_message = strLeft(e.message, 25) + '...'
+          }else{
+            r[r.length-1].small_message = e.message
+          }
+
+        })
+        this.setData({
+          'results': r
+        })
+        console.log(res.data)
+      }.bind(this)
+    })
+  },
+  change_open: function(e) {
+    let tap_id = e.currentTarget.dataset.id
+    let new_show_detail_value = 0
+    if (this.data.show_detail != tap_id){
+      new_show_detail_value = tap_id
+    }
+    this.setData({
+      show_detail: new_show_detail_value
+    })
+  },
+  copy: function (event) {
+  console.log(event.currentTarget.dataset.code + '复制中')
+  wx.showToast({
+    title: '复制中...',
+    icon: 'loading',
+    duration: 2000
+  })
+  wx.setClipboardData({
+    data: event.currentTarget.dataset.code,
+    success: function (res) {
+      wx.getClipboardData({
+        success: function (res) {
+          console.log(res.data + '复制成功') // data
+        },
+        fail: function (res) {
+          console.log(res)
+          wx.showToast({
+            title: '复制失败',
+            icon: 'none',
+            duration: 2000
+          })
+        }
+      })
+    }
+  })
+}
+}
+</script>
+
+<style>
+.inline {
+  display: inline;
+}
+.right {
+  float: right;
+  display: absoulte;
+  padding-right: 60 rpx;
+}
+.hidden {
+  display: none;
+}
+.content {
+  padding: 30rpx;
+}
+.item {
+  display: flex;
+  flex-direction: row;
+}
+</style>
