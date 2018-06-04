@@ -1,6 +1,6 @@
 <template>
   <wxc-panel title="{{item.code}}" wx:for="{{results}}" wx:key="{{id}}">
-  <wxc-cc class="content">
+  <view class="content inline">
     <wxc-icon size="48" type="{{item.checked ? 'yes' : 'help'}}"></wxc-icon>
     <view class="inline">{{item.small_message}}</view>
     <view class="inline right">
@@ -8,7 +8,7 @@
     <wxc-icon size="48" type="{{item.id == show_detail ? 'arrow-down':'arrow-left'}}"
       data-id="{{item.id}}" bindtap="change_open"></wxc-icon>
     </view>
-  </wxc-cc>
+  </view>
   <wxc-panel border="{{false}}" class=" {{item.id == show_detail ? '':'hidden'}}">
     <view>提交时间: {{item.created}}</view>
     <view>详细信息: {{item.message}}</view>
