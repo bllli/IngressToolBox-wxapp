@@ -15,80 +15,76 @@
     <view>已验证: {{item.checked ? '是' : '否'}}</view>
   </wxc-panel>
   </wxc-panel>
+  <view style="text-align: center;">
+    <wxc-button data-type="1" bindtap="to" plain="{{true}}" type="primary" value="上一页"></wxc-button>
+    <wxc-button data-type="2" bindtap="to" plain="{{true}}" type="primary" value="下一页"></wxc-button>
+  </view>
 </template>
 
 <script>
+var common = require('common.js')
 export default {
   config: {
-    navigationBarTitleText: 'PassCode',
+    navigationBarTitleText: 'PassCode快捷复制',
     usingComponents: {
       'wxc-panel': '@minui/wxc-panel',
       'wxc-icon': '@minui/wxc-icon',
-      'wxc-elip': '@minui/wxc-elip',
-            'wxc-button': '@minui/wxc-button',
+      'wxc-button': '@minui/wxc-button'
     }
   },
   data: {
     show_detail: 0,
-    'results': [
-      {
-        id: 1, created: "2018-06-03 00:23", code: "WWD59OWEN767JZ",
-        message: "一个八炸两个八糖三个绿毒四个AXA五个脚一个八炸两个八糖三个绿毒四个AXA五个脚", checked: false
-      },
-      {
-        id: 2, created: "2018-06-03 00:23", code: "WWD59OWEN767JZ1",
-        message: "?", checked: true
-      }
-    ]
+    results: [],
+    previous_url: null,
+    next_url: null
   },
-  onLoad: function () {
-    function strLeft(s, n) {
-      console.log(s, n);
-      var s2 = s.slice(0, n),
-      i = s2.replace(/[x00-xff]/g, "").length;
-      switch (i) {
-        case 0: return s2;
-        case n: return s.slice(0, n>>1);
-        default:
-          var k = n - i,
-            s3 = s.slice(k, n),
-            j = s3.replace(/[x00-xff]/g, "").length;
-        return j ? s.slice(0, k) + strLeft(s3, j) : s.slice(0, k);
-      }
-    }
+  onLoad: function (a, url) {
+    console.log(a);
+    console.log(url);
     wx.showToast({
       title: '加载中...',
       icon: 'loading',
-      duration: 2000
+      duration: 10000
     })
     wx.request({
-      url: 'https://xiao.bllli.cn/code/codes/',
+      url: url || 'https://xiao.bllli.cn/code/codes/',
       header: {
-        'content-type': 'application/json' // 默认值
+        'content-type': 'application/json'
       },
       success: function (res) {
         wx.showToast({
-          title: '加载完成', 
+          title: '加载完成',
           icon: 'success',
           duration: 500
         })
         let r = []
         res.data.results.forEach(function(e){
           r.push(e)
-          // console.log(r);
           if(e.message.length > 25){
-            r[r.length-1].small_message = strLeft(e.message, 25) + '...'
+            r[r.length-1].small_message = common.strLeft(e.message, 25) + '...'
           }else{
             r[r.length-1].small_message = e.message
           }
 
         })
         this.setData({
-          'results': r
+          'results': r,
+          previous_url: res.data.previous,
+          next_url: res.data.next
         })
         console.log(res.data)
       }.bind(this)
     })
+  },
+  to : function (e) {
+    let type_id = e.currentTarget.dataset.type
+    if (type_id==1 && this.data.previous_url) {
+      console.log(this.data.previous_url);
+      this.onLoad({}, this.data.previous_url);
+    } else if (type_id==2 && this.data.next_url) {
+      console.log(this.data.next_url);
+      this.onLoad({}, this.data.next_url);
+    }
   },
   change_open: function(e) {
     let tap_id = e.currentTarget.dataset.id
@@ -101,15 +97,15 @@ export default {
     })
   },
   copy: function (event) {
-  console.log(event.currentTarget.dataset.code + '复制中')
-  wx.showToast({
-    title: '复制中...',
-    icon: 'loading',
-    duration: 2000
-  })
-  wx.setClipboardData({
-    data: event.currentTarget.dataset.code,
-    success: function (res) {
+    console.log(event.currentTarget.dataset.code + '复制中')
+    wx.showToast({
+      title: '复制中...',
+      icon: 'loading',
+      duration: 2000
+    })
+    wx.setClipboardData({
+      data: event.currentTarget.dataset.code,
+      success: function (res) {
       wx.getClipboardData({
         success: function (res) {
           console.log(res.data + '复制成功') // data
@@ -121,11 +117,10 @@ export default {
             icon: 'none',
             duration: 2000
           })
-        }
-      })
-    }
-  })
-}
+        }})
+      }
+    })
+  }
 }
 </script>
 
